@@ -26,6 +26,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: protocare_backend
+    volumes:
+      - ./data/documents:/app/data/documents
+      # - ./chroma_db:/app/chroma_db
     restart: unless-stopped
     env_file: .env
     ports:

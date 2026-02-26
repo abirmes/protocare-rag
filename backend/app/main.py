@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.session import engine
 from app.db import models
-from app.api.routes import auth
+from app.api.routes import auth , query
 from app.exceptions import register_exception_handlers
 
 models.Base.metadata.create_all(bind=engine)
@@ -22,6 +22,7 @@ app.add_middleware(
 register_exception_handlers(app)
 
 app.include_router(auth.router)
+# app.include_router(query.router)
 
 
 @app.get("/health", tags=["health"])
