@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "intfloat/multilingual-e5-base"    
     CHROMA_PERSIST_DIR: str = "./chroma_db"
     RETRIEVER_K: int = 5
+    LLM_MODEL: str = "mistral"                
+    OLLAMA_BASE_URL: str = "http://ollama:11434"  
+    LLM_TEMPERATURE: float = 0.0                 
     class Config:
         env_file = ".env"
 

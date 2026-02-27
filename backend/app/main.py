@@ -22,7 +22,7 @@ app.add_middleware(
 register_exception_handlers(app)
 
 app.include_router(auth.router)
-# app.include_router(query.router)
+app.include_router(query.router)
 
 
 @app.get("/health", tags=["health"])

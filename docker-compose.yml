@@ -1,8 +1,5 @@
 version: "3.9"
-
 services:
-
-
   postgres:
     image: postgres:15-alpine
     container_name: protocare_postgres
@@ -28,7 +25,8 @@ services:
     container_name: protocare_backend
     volumes:
       - ./data/documents:/app/data/documents
-      # - ./chroma_db:/app/chroma_db
+      - ./chroma_db:/app/chroma_db
+
     restart: unless-stopped
     env_file: .env
     ports:
@@ -36,21 +34,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   container_name: protocare_ollama
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ollama_data:/root/.ollama
-  #   ports:
-  #     - "11434:11434"
+  ollama:
+    image: ollama/ollama:latest
+    container_name: protocare_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
 
   # frontend:
   #   build:
@@ -60,12 +59,11 @@ services:
   #   restart: unless-stopped
   #   env_file: .env
   #   environment:
-  #     BACKEND_URL: http://backend:8000
+  #     BACKEND_URL: http://backend:8002
   #   ports:
   #     - "8501:8501"
   #   depends_on:
   #     - backend
-
 
   # mlflow:
   #   image: ghcr.io/mlflow/mlflow:v2.11.0
@@ -81,7 +79,6 @@ services:
   #     - mlflow_data:/mlflow
   #   ports:
   #     - "5000:5000"
-
 
   # prometheus:
   #   image: prom/prometheus:latest
@@ -108,7 +105,6 @@ services:
 
 volumes:
   postgres_data:
-  # chroma_data:      # décommenter à l'étape RAG
-  # ollama_data:      # décommenter à l'étape RAG
-  # mlflow_data:      # décommenter à l'étape LLMOps
-  # grafana_data:     # décommenter à l'étape Monitoring
+  ollama_data:
+  # mlflow_data:
+  # grafana_data:
