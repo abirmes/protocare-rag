@@ -2,7 +2,7 @@
 
 from typing import List
 from langchain.schema import Document
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from app.core.config import settings
 from app.rag.chunker import chunk_markdown_file

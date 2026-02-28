@@ -26,7 +26,7 @@ services:
     volumes:
       - ./data/documents:/app/data/documents
       - ./chroma_db:/app/chroma_db
-
+      - ./rag_ops:/app/rag_ops
     restart: unless-stopped
     env_file: .env
     ports:
@@ -35,6 +35,8 @@ services:
       postgres:
         condition: service_healthy
       ollama:
+        condition: service_started
+      mlflow:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -46,39 +48,44 @@ services:
     image: ollama/ollama:latest
     container_name: protocare_ollama
     restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: protocare_frontend
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   environment:
-  #     BACKEND_URL: http://backend:8002
-  #   ports:
-  #     - "8501:8501"
-  #   depends_on:
-  #     - backend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: protocare_frontend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      API_BASE_URL: http://backend:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
 
-  # mlflow:
-  #   image: ghcr.io/mlflow/mlflow:v2.11.0
-  #   container_name: protocare_mlflow
-  #   restart: unless-stopped
-  #   command: >
-  #     mlflow server
-  #     --host 0.0.0.0
-  #     --port 5000
-  #     --backend-store-uri sqlite:///mlflow.db
-  #     --default-artifact-root /mlflow/artifacts
-  #   volumes:
-  #     - mlflow_data:/mlflow
-  #   ports:
-  #     - "5000:5000"
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.10.0
+    container_name: protocare_mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+      --allowed-hosts "*"
 
   # prometheus:
   #   image: prom/prometheus:latest
@@ -106,5 +113,5 @@ services:
 volumes:
   postgres_data:
   ollama_data:
-  # mlflow_data:
+  mlflow_data:
   # grafana_data:

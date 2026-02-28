@@ -15,7 +15,12 @@ class Settings(BaseSettings):
     RETRIEVER_K: int = 5
     LLM_MODEL: str = "mistral"                
     OLLAMA_BASE_URL: str = "http://ollama:11434"  
-    LLM_TEMPERATURE: float = 0.0                 
+    LLM_TEMPERATURE: float = 0.0         
+    LLM_MAX_TOKENS: int = 2048
+    LLM_TOP_P: float = 0.9
+    LLM_TOP_K: int = 40
+    MLFLOW_TRACKING_URI: str = "http://mlflow:5000"
+    MLFLOW_EXPERIMENT_NAME: str = "protocare-rag"       
     class Config:
         env_file = ".env"
 
