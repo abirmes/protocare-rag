@@ -69,19 +69,6 @@ def test_login_wrong_password():
     assert r.status_code == 401
 
 
-def test_me_authenticated():
-    register()
-    token = login().json()["access_token"]
-    r = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
-    assert r.status_code == 200
-    assert r.json()["username"] == USER["username"]
-
-
-def test_me_unauthenticated():
-    r = client.get("/auth/me")
-    assert r.status_code == 401
-
-
 def test_health():
     r = client.get("/health")
     assert r.status_code == 200

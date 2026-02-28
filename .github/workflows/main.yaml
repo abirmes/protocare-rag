@@ -1,123 +1,123 @@
-# name: ProtoCare Backend CI/CD Pipeline
+name: ProtoCare Backend CI/CD Pipeline
 
-# on:
-#   push:
-#     branches: [main, develop]
-#   pull_request:
-#     branches: [main]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
-# env:
-#   DOCKER_IMAGE: abirmeskini/protocare-backend
-#   PYTHON_VERSION: "3.11"
+env:
+  DOCKER_IMAGE: abirmeskini/protocare-backend
+  PYTHON_VERSION: "3.11"
 
-# jobs:
-#   tests:
-#     name: Run Unit and RAG Tests
-#     runs-on: ubuntu-latest
+jobs:
+  tests:
+    name: Run Unit and RAG Tests
+    runs-on: ubuntu-latest
 
-#     services:
-#       postgres:
-#         image: postgres:15-alpine
-#         env:
-#           POSTGRES_USER: protocare
-#           POSTGRES_PASSWORD: protocare
-#           POSTGRES_DB: protocare_db
-#         ports:
-#           - 5432:5432
-#         options: >-
-#           --health-cmd pg_isready
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: protocare
+          POSTGRES_PASSWORD: protocare
+          POSTGRES_DB: protocare_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-#     env:
-#       DATABASE_URL: postgresql://protocare:protocare@localhost:5432/protocare_db
-#       SECRET_KEY: test-secret-key-ci
-#       ALGORITHM: HS256
-#       ACCESS_TOKEN_EXPIRE_MINUTES: 60
-#       EMBEDDING_MODEL: intfloat/multilingual-e5-base
-#       CHROMA_PERSIST_DIR: ./chroma_db
-#       RETRIEVER_K: 5
-#       LLM_MODEL: mistral
-#       OLLAMA_BASE_URL: http://localhost:11434
-#       LLM_TEMPERATURE: 0.0
-#       LLM_MAX_TOKENS: 2048
-#       LLM_TOP_P: 0.9
-#       LLM_TOP_K: 40
-#       MLFLOW_TRACKING_URI: http://localhost:5000
-#       MLFLOW_EXPERIMENT_NAME: protocare-rag
-#       CHUNK_SIZE: 768
-#       CHUNK_OVERLAP: 128
+    env:
+      DATABASE_URL: postgresql://protocare:protocare@localhost:5432/protocare_db
+      SECRET_KEY: test-secret-key-ci
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      EMBEDDING_MODEL: intfloat/multilingual-e5-base
+      CHROMA_PERSIST_DIR: ./chroma_db
+      RETRIEVER_K: 5
+      LLM_MODEL: mistral
+      OLLAMA_BASE_URL: http://localhost:11434
+      LLM_TEMPERATURE: 0.0
+      LLM_MAX_TOKENS: 2048
+      LLM_TOP_P: 0.9
+      LLM_TOP_K: 40
+      MLFLOW_TRACKING_URI: http://localhost:5000
+      MLFLOW_EXPERIMENT_NAME: protocare-rag
+      CHUNK_SIZE: 768
+      CHUNK_OVERLAP: 128
 
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-#       - name: Setup Python
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: ${{ env.PYTHON_VERSION }}
-#           cache: pip
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
-#       - name: Install Dependencies
-#         working-directory: backend
-#         run: |
-#           pip install --upgrade pip
-#           pip install -r requirements.txt
+      - name: Install Dependencies
+        working-directory: backend
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-#       - name: Run API Tests
-#         working-directory: backend
-#         run: |
-#           PYTHONPATH=/home/runner/work/protocare-rag/protocare-rag/backend \
-#           pytest tests/test_api.py -v --tb=short
+      - name: Run API Tests
+        working-directory: backend
+        run: |
+          PYTHONPATH=/home/runner/work/protocare-rag/protocare-rag/backend \
+          pytest tests/test_api.py -v --tb=short
 
-#       - name: Run RAG Tests
-#         working-directory: backend
-#         run: |
-#           PYTHONPATH=/home/runner/work/protocare-rag/protocare-rag/backend \
-#           pytest tests/test_rag.py -v --tb=short
+      - name: Run RAG Tests
+        working-directory: backend
+        run: |
+          PYTHONPATH=/home/runner/work/protocare-rag/protocare-rag/backend \
+          pytest tests/test_rag.py -v --tb=short
 
-#   docker:
-#     name: Build and Push Docker Image
-#     runs-on: ubuntu-latest
-#     needs: tests
-#     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-#       - name: Login to Docker Hub
-#         uses: docker/login-action@v3
-#         with:
-#           username: ${{ secrets.DOCKERHUB_USERNAME }}
-#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#       - name: Setup Docker Buildx
-#         uses: docker/setup-buildx-action@v3
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-#       - name: Extract Image Metadata
-#         id: meta
-#         uses: docker/metadata-action@v5
-#         with:
-#           images: ${{ env.DOCKER_IMAGE }}
-#           tags: |
-#             type=ref,event=branch
-#             type=sha,prefix=sha-
-#             type=raw,value=latest,enable={{is_default_branch}}
+      - name: Extract Image Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
 
-#       - name: Build and Push Image
-#         uses: docker/build-push-action@v5
-#         with:
-#           context: ./backend
-#           dockerfile: ./backend/Dockerfile
-#           push: true
-#           tags: ${{ steps.meta.outputs.tags }}
-#           labels: ${{ steps.meta.outputs.labels }}
-#           cache-from: type=gha
-#           cache-to: type=gha,mode=max
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          dockerfile: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-#       - name: Confirm Image Push
-#         run: |
-#           echo "Image pushed: ${{ env.DOCKER_IMAGE }}:latest"
-#           echo "Tags: ${{ steps.meta.outputs.tags }}"
+      - name: Confirm Image Push
+        run: |
+          echo "Image pushed: ${{ env.DOCKER_IMAGE }}:latest"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"

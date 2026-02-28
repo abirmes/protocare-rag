@@ -20,7 +20,8 @@ class Settings(BaseSettings):
     LLM_TOP_P: float = 0.9
     LLM_TOP_K: int = 40
     MLFLOW_TRACKING_URI: str = "http://mlflow:5000"
-    MLFLOW_EXPERIMENT_NAME: str = "protocare-rag"       
+    MLFLOW_EXPERIMENT_NAME: str = "protocare-rag"     
+      
     class Config:
         env_file = ".env"
 
