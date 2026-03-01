@@ -4,6 +4,7 @@ from app.db.session import engine
 from app.db import models
 from app.api.routes import auth, query, history
 from app.exceptions import register_exception_handlers
+from app.api.routes import auth, query, history, metrics
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -22,6 +23,8 @@ register_exception_handlers(app)
 app.include_router(auth.router)
 app.include_router(query.router)
 app.include_router(history.router)
+app.include_router(metrics.router)
+
 
 
 @app.on_event("startup")

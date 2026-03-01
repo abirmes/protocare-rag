@@ -1,0 +1,450 @@
+{
+    "id": null,
+    "uid": "protocare-rag",
+    "title": "ProtoCare RAG — Monitoring",
+    "tags": [
+        "protocare",
+        "rag",
+        "medical"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "15s",
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "panels": [
+        {
+            "id": 1,
+            "title": "Requêtes RAG / minute",
+            "type": "stat",
+            "gridPos": {
+                "x": 0,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "targets": [
+                {
+                    "expr": "rate(rag_requests_total[1m]) * 60",
+                    "legendFormat": "req/min"
+                }
+            ],
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "red",
+                                "value": 30
+                            }
+                        ]
+                    },
+                    "unit": "reqps"
+                }
+            }
+        },
+        {
+            "id": 2,
+            "title": "Latence RAG moyenne (s)",
+            "type": "stat",
+            "gridPos": {
+                "x": 6,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "targets": [
+                {
+                    "expr": "rag_request_duration_seconds_avg",
+                    "legendFormat": "latence moy."
+                }
+            ],
+            "options": {
+                "colorMode": "background",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 30
+                            },
+                            {
+                                "color": "red",
+                                "value": 60
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                }
+            }
+        },
+        {
+            "id": 3,
+            "title": "Taux d'erreurs (%)",
+            "type": "stat",
+            "gridPos": {
+                "x": 12,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "targets": [
+                {
+                    "expr": "rate(rag_requests_total{status='error'}[5m]) / rate(rag_requests_total[5m]) * 100",
+                    "legendFormat": "erreurs %"
+                }
+            ],
+            "options": {
+                "colorMode": "background",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 5
+                            },
+                            {
+                                "color": "red",
+                                "value": 10
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            }
+        },
+        {
+            "id": 4,
+            "title": "Answer Relevance (DeepEval)",
+            "type": "stat",
+            "gridPos": {
+                "x": 18,
+                "y": 0,
+                "w": 6,
+                "h": 4
+            },
+            "targets": [
+                {
+                    "expr": "rag_answer_relevance_avg",
+                    "legendFormat": "relevance"
+                }
+            ],
+            "options": {
+                "colorMode": "background",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.75
+                            }
+                        ]
+                    },
+                    "min": 0,
+                    "max": 1
+                }
+            }
+        },
+        {
+            "id": 5,
+            "title": "Latence RAG dans le temps",
+            "type": "timeseries",
+            "gridPos": {
+                "x": 0,
+                "y": 4,
+                "w": 12,
+                "h": 8
+            },
+            "targets": [
+                {
+                    "expr": "rag_request_duration_seconds_avg",
+                    "legendFormat": "Latence moyenne"
+                },
+                {
+                    "expr": "rag_request_duration_seconds_max",
+                    "legendFormat": "Latence max"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    }
+                }
+            },
+            "options": {
+                "tooltip": {
+                    "mode": "multi"
+                },
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                }
+            }
+        },
+        {
+            "id": 6,
+            "title": "Métriques qualité RAG (DeepEval)",
+            "type": "timeseries",
+            "gridPos": {
+                "x": 12,
+                "y": 4,
+                "w": 12,
+                "h": 8
+            },
+            "targets": [
+                {
+                    "expr": "rag_answer_relevance_avg",
+                    "legendFormat": "Answer Relevance"
+                },
+                {
+                    "expr": "rag_faithfulness_avg",
+                    "legendFormat": "Faithfulness"
+                },
+                {
+                    "expr": "rag_precision_at_k_avg",
+                    "legendFormat": "Precision@k"
+                },
+                {
+                    "expr": "rag_recall_at_k_avg",
+                    "legendFormat": "Recall@k"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "min": 0,
+                    "max": 1,
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    }
+                }
+            },
+            "options": {
+                "tooltip": {
+                    "mode": "multi"
+                },
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                }
+            }
+        },
+        {
+            "id": 7,
+            "title": "CPU Backend (%)",
+            "type": "timeseries",
+            "gridPos": {
+                "x": 0,
+                "y": 12,
+                "w": 12,
+                "h": 8
+            },
+            "targets": [
+                {
+                    "expr": "rate(container_cpu_usage_seconds_total{name='protocare_backend'}[1m]) * 100",
+                    "legendFormat": "CPU %"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 60
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "id": 8,
+            "title": "RAM Backend (MB)",
+            "type": "timeseries",
+            "gridPos": {
+                "x": 12,
+                "y": 12,
+                "w": 12,
+                "h": 8
+            },
+            "targets": [
+                {
+                    "expr": "container_memory_usage_bytes{name='protocare_backend'} / 1024 / 1024",
+                    "legendFormat": "RAM MB"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "megabytes",
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    }
+                }
+            }
+        },
+        {
+            "id": 9,
+            "title": "Requêtes RAG — succès vs erreurs",
+            "type": "timeseries",
+            "gridPos": {
+                "x": 0,
+                "y": 20,
+                "w": 24,
+                "h": 8
+            },
+            "targets": [
+                {
+                    "expr": "rate(rag_requests_total{status='success'}[1m])",
+                    "legendFormat": "Succès"
+                },
+                {
+                    "expr": "rate(rag_requests_total{status='error'}[1m])",
+                    "legendFormat": "Erreurs"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "reqps",
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Erreurs"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Succès"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: ProtoCare
+    folder: ProtoCare RAG
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

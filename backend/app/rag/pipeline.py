@@ -1,7 +1,7 @@
-
 import re
 import sys
 import time
+import threading
 from typing import Dict, Any
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,16 +10,19 @@ from langchain_ollama import OllamaLLM
 
 from app.core.config import settings
 from app.rag.retriever import retrieve
+from app.api.routes.metrics import record_request, record_deepeval_scores
 
+# ── MLFlow ────────────────────────────────────────────────────────────────────
 MLFLOW_ENABLED = False
 try:
     sys.path.insert(0, "/app")
     from rag_ops.rag_tracking import log_query, evaluate_with_deepeval
     MLFLOW_ENABLED = True
-    print("[MLFlow] tracking activé ")
+    print("[MLFlow] tracking activé ✓")
 except Exception as e:
     print(f"[MLFlow] désactivé: {e}")
 
+# ── LLM ───────────────────────────────────────────────────────────────────────
 llm = OllamaLLM(
     model=settings.LLM_MODEL,
     base_url=settings.OLLAMA_BASE_URL,
@@ -86,8 +89,8 @@ def _clean_answer(text: str) -> str:
     ]
     for p in patterns:
         text = re.sub(p, "", text, flags=re.IGNORECASE)
-        text = re.sub(r"<[^>]+>", "", text)
-        text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
@@ -103,11 +106,25 @@ def _build_context(docs) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+def _background_eval(question, answer, context_list, run_id):
+    try:
+        scores = evaluate_with_deepeval(
+            question     = question,
+            answer       = answer,
+            context_list = context_list,
+            run_id       = run_id,
+        )
+        record_deepeval_scores(scores)  # ← Prometheus
+    except Exception as e:
+        print(f"[MLFlow] background eval error: {e}")
+
+
 def run(question: str) -> Dict[str, Any]:
     start = time.time()
 
     docs = retrieve(question)
     if not docs:
+        record_request(latency=0.0, status="error", chunks=0)
         return {
             "answer":      "Je ne trouve pas cette information dans les protocoles disponibles.",
             "sources":     [],
@@ -128,7 +145,10 @@ def run(question: str) -> Dict[str, Any]:
     })
 
     final_answer = _clean_answer(final_answer)
-    latency      = round(time.time() - start, 3)
+    latency      = round(time.time() - start, 3)  # ← calculé avant record_request
+
+    # ── Prometheus ────────────────────────────────────────────────────────────
+    record_request(latency=latency, status="success", chunks=len(docs))
 
     sources = list({
         f"Protocole : {doc.metadata.get('protocol', 'Inconnu')} — "
@@ -147,9 +167,8 @@ def run(question: str) -> Dict[str, Any]:
                 context     = context,
             )
             context_list = [doc.page_content for doc in docs]
-            import threading
             threading.Thread(
-                target=evaluate_with_deepeval,
+                target=_background_eval,
                 kwargs={
                     "question":     question,
                     "answer":       final_answer,
@@ -158,7 +177,6 @@ def run(question: str) -> Dict[str, Any]:
                 },
                 daemon=True
             ).start()
-
         except Exception as e:
             print(f"[MLFlow] tracking error (non-bloquant): {e}")
 

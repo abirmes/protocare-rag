@@ -1,0 +1,64 @@
+groups:
+  - name: protocare-rag-alerts
+    rules:
+
+      - alert: RAGLatenceElevee
+        expr: rag_request_duration_seconds > 60
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence RAG élevée"
+          description: "La latence RAG dépasse 60s — valeur actuelle: {{ $value }}s"
+
+      - alert: TauxErreurEleve
+        expr: >
+          rate(rag_requests_total{status="error"}[5m])
+          /
+          rate(rag_requests_total[5m]) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taux d'erreurs RAG > 10%"
+          description: "Trop d'erreurs RAG — taux actuel: {{ $value | humanizePercentage }}"
+
+      - alert: QualiteReponseFaible
+        expr: rag_answer_relevance_avg < 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Qualité des réponses RAG faible"
+          description: "Answer relevance moyenne < 0.5 — valeur: {{ $value }}"
+
+      - alert: CPUBackendEleve
+        expr: >
+          rate(container_cpu_usage_seconds_total{name="protocare_backend"}[5m]) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU backend élevé"
+          description: "CPU backend > 80% — valeur: {{ $value }}%"
+
+      - alert: RAMBackendElevee
+        expr: >
+          container_memory_usage_bytes{name="protocare_backend"}
+          /
+          container_spec_memory_limit_bytes{name="protocare_backend"} * 100 > 85
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RAM backend critique"
+          description: "RAM backend > 85% — valeur: {{ $value }}%"
+
+      - alert: BackendDown
+        expr: up{job="protocare-backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend ProtoCare DOWN"
+          description: "Le backend FastAPI ne répond plus"
