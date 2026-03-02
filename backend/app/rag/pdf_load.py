@@ -1,6 +1,3 @@
-"""
-pdf_load.py — Charge un PDF avec LlamaParse et sauvegarde en Markdown.
-"""
 
 from pathlib import Path
 from llama_parse import LlamaParse
@@ -11,7 +8,6 @@ OUTPUT_PATH = "data/documents/guide_de_protocoles_markdown.md"
 
 
 def load_pdf_to_markdown(pdf_path: str) -> str:
-    """Charge un PDF avec LlamaParse et retourne le contenu en Markdown."""
     parser = LlamaParse(
         api_key=settings.LLAMA_CLOUD_API_KEY,
         result_type="markdown",
@@ -23,15 +19,11 @@ def load_pdf_to_markdown(pdf_path: str) -> str:
 
 
 def save_pdf_as_markdown(pdf_path: str) -> str:
-    """
-    Charge un PDF, nettoie le markdown et sauvegarde dans :
-    data/documents/guide_de_protocoles_markdown.md
-    """
+  
     print(f"Chargement du PDF : {pdf_path}")
     content = load_pdf_to_markdown(pdf_path)
 
-    # Nettoyage du markdown
-    print("Nettoyage du markdown...")
+    
     content = clean_markdown(content)
 
     output = Path(OUTPUT_PATH)

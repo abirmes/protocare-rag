@@ -24,7 +24,6 @@ def _split_into_protocols(text: str) -> List[str]:
 
     while i < len(lines):
         line = lines[i]
-        # Supprime "PÉDIATRIE   Version : 2" si la ligne suivante contient XXXXX
         if re.match(r"^PÉDIATRIE\s+Version\s*:", line):
             next_line = lines[i + 1] if i + 1 < len(lines) else ""
             if "XXXXX" in next_line:
@@ -35,7 +34,6 @@ def _split_into_protocols(text: str) -> List[str]:
 
     cleaned_text = "\n".join(cleaned_lines)
 
-    # Découpe sur les lignes contenant XXXXX
     protocols = re.split(r"(?=^.*XXXXX.*$)", cleaned_text, flags=re.MULTILINE)
     return [p.strip() for p in protocols if p.strip()]
 

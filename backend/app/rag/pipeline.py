@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.rag.retriever import retrieve
 from app.api.routes.metrics import record_request, record_deepeval_scores
 
-# ── MLFlow ────────────────────────────────────────────────────────────────────
 MLFLOW_ENABLED = False
 try:
     sys.path.insert(0, "/app")
@@ -22,7 +21,6 @@ try:
 except Exception as e:
     print(f"[MLFlow] désactivé: {e}")
 
-# ── LLM ───────────────────────────────────────────────────────────────────────
 llm = OllamaLLM(
     model=settings.LLM_MODEL,
     base_url=settings.OLLAMA_BASE_URL,
@@ -114,7 +112,7 @@ def _background_eval(question, answer, context_list, run_id):
             context_list = context_list,
             run_id       = run_id,
         )
-        record_deepeval_scores(scores)  # ← Prometheus
+        record_deepeval_scores(scores)  
     except Exception as e:
         print(f"[MLFlow] background eval error: {e}")
 
@@ -145,9 +143,8 @@ def run(question: str) -> Dict[str, Any]:
     })
 
     final_answer = _clean_answer(final_answer)
-    latency      = round(time.time() - start, 3)  # ← calculé avant record_request
+    latency      = round(time.time() - start, 3)  
 
-    # ── Prometheus ────────────────────────────────────────────────────────────
     record_request(latency=latency, status="success", chunks=len(docs))
 
     sources = list({

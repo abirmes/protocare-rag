@@ -5,165 +5,221 @@ import streamlit as st
 from utils.api import login, register, get_me
 
 st.set_page_config(
-    page_title="MediAssist – Connexion",
-    page_icon="🏥",
-    layout="centered",
+    page_title="ProtoCare",
+    page_icon="⊕",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');
 
-html, body, [data-testid="stAppViewContainer"] {
-    background: #F4F1EC !important;
-    font-family: 'DM Sans', sans-serif;
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+    background: #F7F4EF !important;
+    font-family: 'Outfit', sans-serif;
 }
-[data-testid="collapsedControl"], #MainMenu, footer, header { display:none !important; visibility:hidden; }
+[data-testid="collapsedControl"], #MainMenu, footer, header,
+[data-testid="stHeader"] { display:none !important; visibility:hidden !important; }
+.block-container { padding: 0 !important; max-width: 100% !important; }
+[data-testid="stMain"] > div { padding: 0 !important; }
 
-/* Carte centrale */
-[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
-    background: #fff;
-    border: 1px solid #E2DDD5;
-    border-radius: 20px;
-    padding: 40px 48px !important;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.07);
-    max-width: 460px;
-    margin: 40px auto;
+/* LEFT PANEL */
+.left-panel {
+    background: #17202A;
+    min-height: 100vh;
+    padding: 56px 52px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+}
+.left-circle-1 {
+    position: absolute; top: -120px; right: -120px;
+    width: 420px; height: 420px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.left-circle-2 {
+    position: absolute; bottom: -80px; left: -60px;
+    width: 280px; height: 280px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+.left-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; letter-spacing: 6px;
+    text-transform: uppercase; font-weight: 400;
+    color: rgba(240,234,224,0.9);
+}
+.left-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 52px; font-weight: 300; line-height: 1.12;
+    color: #F0EAE0; letter-spacing: -1px;
+}
+.left-headline em { color: rgba(240,234,224,0.28); font-style: italic; }
+.left-caption {
+    font-size: 13px; color: rgba(255,255,255,0.25);
+    line-height: 1.8; max-width: 300px;
+}
+.left-footer {
+    font-size: 10.5px; color: rgba(255,255,255,0.12);
+    letter-spacing: 1.5px; text-transform: uppercase;
 }
 
-/* Brand */
-.brand { display:flex; align-items:center; gap:12px; margin-bottom:32px; }
-.brand-icon { width:46px; height:46px; background:#1A3A5C; border-radius:12px;
-    display:flex; align-items:center; justify-content:center; font-size:22px; }
-.brand-name { font-family:'Lora',serif; font-size:21px; font-weight:600; color:#1A3A5C; }
-.brand-sub { font-size:10px; color:#9A9080; letter-spacing:1.8px; text-transform:uppercase; }
-
-.page-title { font-family:'Lora',serif; font-size:22px; font-weight:600; color:#1A3A5C; margin-bottom:4px; }
-.page-sub { font-size:13px; color:#7A7060; margin-bottom:24px; }
-
-/* Inputs */
-[data-testid="stTextInput"] label { font-size:12.5px !important; font-weight:600 !important; color:#3A3A3A !important; }
+/* INPUTS */
+[data-testid="stTextInput"] label {
+    font-size: 10.5px !important; font-weight: 600 !important;
+    letter-spacing: 1.8px !important; text-transform: uppercase !important;
+    color: #888070 !important; margin-bottom: 6px !important;
+}
 [data-testid="stTextInput"] input {
-    background:#FAFAF8 !important; border:1.5px solid #DDD8CF !important;
-    border-radius:10px !important; padding:11px 15px !important;
-    font-size:14px !important; font-family:'DM Sans',sans-serif !important; color:#1A1A1A !important;
+    background: #fff !important;
+    border: 1.5px solid #E4DED4 !important;
+    border-radius: 8px !important;
+    padding: 13px 18px !important;
+    font-size: 14px !important;
+    font-family: 'Outfit', sans-serif !important;
+    color: #1C1C1C !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+    transition: all 0.18s !important;
 }
-[data-testid="stTextInput"] input:focus { border-color:#1A3A5C !important; box-shadow:0 0 0 3px rgba(26,58,92,0.08) !important; }
-
-/* Selectbox */
-[data-testid="stSelectbox"] label { font-size:12.5px !important; font-weight:600 !important; color:#3A3A3A !important; }
+[data-testid="stTextInput"] input:focus {
+    border-color: #17202A !important;
+    box-shadow: 0 0 0 3px rgba(23,32,42,0.08) !important;
+}
+[data-testid="stSelectbox"] label {
+    font-size: 10.5px !important; font-weight: 600 !important;
+    letter-spacing: 1.8px !important; text-transform: uppercase !important;
+    color: #888070 !important;
+}
 [data-testid="stSelectbox"] > div > div {
-    background:#FAFAF8 !important; border:1.5px solid #DDD8CF !important; border-radius:10px !important;
+    background: #fff !important;
+    border: 1.5px solid #E4DED4 !important;
+    border-radius: 8px !important;
 }
 
-/* Bouton submit */
 [data-testid="stFormSubmitButton"] button {
-    width:100% !important; background:#1A3A5C !important; color:#fff !important;
-    border:none !important; border-radius:10px !important; padding:13px !important;
-    font-size:14px !important; font-weight:600 !important; font-family:'DM Sans',sans-serif !important;
-    cursor:pointer; transition: background 0.2s !important;
+    width: 100% !important;
+    background: #17202A !important; color: #F0EAE0 !important;
+    border: none !important; border-radius: 8px !important;
+    padding: 14px !important; font-size: 14px !important;
+    font-weight: 500 !important;
+    font-family: 'Outfit', sans-serif !important;
+    letter-spacing: 0.5px !important;
+    transition: opacity 0.18s !important;
+    box-shadow: 0 4px 16px rgba(23,32,42,0.22) !important;
 }
-[data-testid="stFormSubmitButton"] button:hover { background:#0F2540 !important; }
+[data-testid="stFormSubmitButton"] button:hover { opacity: 0.88 !important; }
 
-/* Tabs */
+/* TABS */
 [data-baseweb="tab-list"] {
-    background:#F0EDE7 !important; border-radius:10px !important;
-    padding:4px !important; gap:4px !important; border-bottom:none !important; margin-bottom:22px;
+    background: #EEEAE3 !important;
+    border-radius: 8px !important; padding: 3px !important;
+    gap: 3px !important; border-bottom: none !important;
+    margin-bottom: 32px !important;
 }
 [data-baseweb="tab"] {
-    border-radius:8px !important; font-family:'DM Sans',sans-serif !important;
-    font-size:13px !important; font-weight:500 !important; color:#7A7060 !important; padding:8px 22px !important;
+    border-radius: 6px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 13px !important; font-weight: 400 !important;
+    color: #8A8070 !important; padding: 9px 22px !important;
 }
 [aria-selected="true"] {
-    background:#fff !important; color:#1A3A5C !important;
-    font-weight:600 !important; box-shadow:0 1px 4px rgba(0,0,0,0.1) !important;
+    background: #fff !important; color: #1C1C1C !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1) !important;
 }
-[data-testid="stAlert"] { border-radius:10px !important; font-size:13px !important; }
 
-.footer { text-align:center; font-size:11.5px; color:#B0A898; margin-top:24px; line-height:1.7; }
+.form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 300; color: #1C1C1C;
+    letter-spacing: -0.5px; margin-bottom: 8px;
+}
+.form-sub { font-size: 13.5px; color: #8A8070; margin-bottom: 32px; line-height: 1.6; }
+[data-testid="stAlert"] { border-radius: 8px !important; font-size: 13px !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session state ─────────────────────────────────────────────────────────────
 for k, v in [("token", None), ("user", None), ("chat_messages", []), ("query_count", 0)]:
     if k not in st.session_state:
         st.session_state[k] = v
 
-# Déjà connecté → on redirige directement vers le chat
 if st.session_state.token:
     st.switch_page("pages/chat.py")
 
-# ── Contenu ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="brand">
-  <div class="brand-icon">🏥</div>
-  <div>
-    <div class="brand-name">MediAssist</div>
-    <div class="brand-sub">Assistant Médical RAG</div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+col_left, col_right = st.columns([9, 11])
 
-tab_login, tab_register = st.tabs(["Connexion", "Créer un compte"])
+with col_left:
+    st.markdown("""
+    <div class="left-panel">
+      <div class="left-circle-1"></div>
+      <div class="left-circle-2"></div>
+      <div class="left-logo">ProtoCare</div>
+      <div>
+        <div class="left-headline">
+          L'assistant qui<br>
+          <em>connaît</em> vos<br>
+          protocoles.
+        </div>
+        <div style="margin-top: 28px;">
+          <div class="left-caption">
+            Accès sécurisé · Données chiffrées<br>
+            Réservé au personnel médical autorisé.<br><br>
+            Base vectorielle ChromaDB · Mistral 7B<br>
+            Self-RAG · MLFlow · ProtoCare v1.0
+          </div>
+        </div>
+      </div>
+      <div class="left-footer">© 2025 ProtoCare · Confidentiel</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ── Onglet CONNEXION ──────────────────────────────────────────────────────────
-with tab_login:
-    st.markdown('<p class="page-title">Bon retour 👋</p><p class="page-sub">Connectez-vous à votre espace médical.</p>', unsafe_allow_html=True)
+with col_right:
+    st.markdown("<div style='padding: 56px 64px 56px 52px;'>", unsafe_allow_html=True)
 
-    with st.form("form_login"):
-        # Votre backend accepte email OU username dans le champ "username" de OAuth2
-        username = st.text_input("Email ou identifiant", placeholder="dr.dupont  ou  dr@hopital.fr")
-        password = st.text_input("Mot de passe", type="password", placeholder="••••••••")
-        submit   = st.form_submit_button("Se connecter →")
+    tab_login, tab_register = st.tabs(["Connexion", "Créer un compte"])
 
-    if submit:
-        if not username or not password:
-            st.error("Remplissez tous les champs.")
-        else:
-            with st.spinner("Connexion…"):
-                data, err = login(username, password)
-            if err:
-                st.error(f"❌ {err}")
+    with tab_login:
+        st.markdown('<div class="form-title">Bon retour.</div><div class="form-sub">Identifiez-vous pour accéder à l\'assistant médical.</div>', unsafe_allow_html=True)
+        with st.form("login"):
+            email    = st.text_input("Identifiant ou email", placeholder="dr.dupont ou dr@hopital.fr")
+            password = st.text_input("Mot de passe", type="password", placeholder="••••••••")
+            submit   = st.form_submit_button("Accéder à ProtoCare →")
+        if submit:
+            if not email or not password:
+                st.error("Veuillez remplir tous les champs.")
             else:
-                # Stocke le token JWT
-                st.session_state.token = data["access_token"]
-                # Récupère le profil utilisateur via GET /auth/me
-                user, _ = get_me()
-                st.session_state.user = user or {"username": username}
-                st.success("✅ Connecté !")
-                st.switch_page("pages/chat.py")
+                with st.spinner(""):
+                    data, err = login(email, password)
+                if err:
+                    st.error("Identifiants incorrects.")
+                else:
+                    st.session_state.token = data["access_token"]
+                    user, _ = get_me()
+                    st.session_state.user = user or {"username": email}
+                    st.switch_page("pages/chat.py")
 
-# ── Onglet INSCRIPTION ────────────────────────────────────────────────────────
-with tab_register:
-    st.markdown('<p class="page-title">Créer un compte</p><p class="page-sub">Accès réservé au personnel médical autorisé.</p>', unsafe_allow_html=True)
-
-    with st.form("form_register"):
-        # Champs exacts de votre UserCreate : username, email, password, role
-        reg_username = st.text_input("Identifiant",           placeholder="dr.dupont")
-        reg_email    = st.text_input("Email professionnel",   placeholder="dr@hopital.fr")
-        reg_password = st.text_input("Mot de passe",          type="password", placeholder="Min. 8 caractères")
-        reg_confirm  = st.text_input("Confirmer mot de passe",type="password", placeholder="••••••••")
-        # Votre modèle User a un champ "role"
-        reg_role     = st.selectbox("Rôle", ["medecin", "admin"],
+    with tab_register:
+        st.markdown('<div class="form-title">Créer un compte.</div><div class="form-sub">Accès réservé au personnel médical autorisé.</div>', unsafe_allow_html=True)
+        with st.form("register"):
+            reg_user = st.text_input("Identifiant", placeholder="dr.dupont")
+            reg_mail = st.text_input("Email professionnel", placeholder="dr@hopital.fr")
+            reg_pwd  = st.text_input("Mot de passe", type="password", placeholder="Minimum 8 caractères")
+            reg_conf = st.text_input("Confirmer le mot de passe", type="password", placeholder="••••••••")
+            reg_role = st.selectbox("Rôle", ["medecin", "admin"],
                                     format_func=lambda x: "Médecin" if x == "medecin" else "Administrateur")
-        submit_reg   = st.form_submit_button("Créer mon compte →")
-
-    if submit_reg:
-        if not all([reg_username, reg_email, reg_password]):
-            st.error("Remplissez tous les champs.")
-        elif reg_password != reg_confirm:
-            st.error("Les mots de passe ne correspondent pas.")
-        elif len(reg_password) < 8:
-            st.error("Mot de passe trop court (min. 8 caractères).")
-        else:
-            with st.spinner("Création du compte…"):
-                # Appel POST /auth/register avec { username, email, password, role }
-                data, err = register(reg_username, reg_email, reg_password, role=reg_role)
-            if err:
-                st.error(f"❌ {err}")
+            submit_r = st.form_submit_button("Créer mon compte →")
+        if submit_r:
+            if not all([reg_user, reg_mail, reg_pwd]):
+                st.error("Veuillez remplir tous les champs.")
+            elif reg_pwd != reg_conf:
+                st.error("Les mots de passe ne correspondent pas.")
+            elif len(reg_pwd) < 8:
+                st.error("Minimum 8 caractères requis.")
             else:
-                st.success("✅ Compte créé ! Connectez-vous dans l'onglet Connexion.")
+                with st.spinner(""):
+                    data, err = register(reg_user, reg_mail, reg_pwd, role=reg_role)
+                if err:
+                    st.error(f"Erreur : {err}")
+                else:
+                    st.success("Compte créé avec succès. Connectez-vous.")
 
-st.markdown('<div class="footer">Données sécurisées · Conformité RGPD<br>© 2025 MediAssist</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)

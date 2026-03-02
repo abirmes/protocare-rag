@@ -70,10 +70,10 @@ def log_query(
             "question_length": float(len(question)),
         })
 
-        mlflow.log_text(question, "question.txt")
-        mlflow.log_text(answer,   "answer.txt")
+        mlflow.log_text(question, "inputs/question.txt")
+        mlflow.log_text(answer,   "outputs/answer.txt")
         if context:
-            mlflow.log_text(context, "context.txt")
+            mlflow.log_text(context, "inputs/context.txt")
         if sources:
             mlflow.log_text("\n".join(sources), "sources.txt")
 

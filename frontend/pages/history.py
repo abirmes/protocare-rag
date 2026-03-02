@@ -8,283 +8,328 @@ from datetime import datetime
 from collections import Counter
 from utils.api import get_history
 
-st.set_page_config(page_title="MediAssist – Dashboard", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="ProtoCare — Historique",
+    page_icon="⊕",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 if not st.session_state.get("token"):
     st.switch_page("app.py")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
-html, body, [data-testid="stAppViewContainer"] { background:#F4F1EC !important; font-family:'DM Sans',sans-serif; }
-#MainMenu, footer { visibility:hidden; }
-[data-testid="stHeader"] { background:transparent !important; }
-[data-testid="stSidebar"] { background:#1A3A5C !important; border-right:none !important; }
-[data-testid="stSidebar"] * { color:#E8E4DC !important; }
-[data-testid="stButton"] button {
-    font-family:'DM Sans',sans-serif !important; font-size:13px !important; font-weight:500 !important;
-    border-radius:8px !important; background:rgba(255,255,255,0.1) !important;
-    border:1px solid rgba(255,255,255,0.15) !important; color:#fff !important; width:100%;
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+    background: #F7F4EF !important;
+    font-family: 'Outfit', sans-serif; color: #1C1C1C;
 }
-[data-testid="stButton"] button:hover { background:rgba(255,255,255,0.2) !important; }
-.page-header { background:#fff; border:1px solid #E2DDD5; border-radius:14px; padding:20px 28px;
-    display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;
-    box-shadow:0 2px 12px rgba(0,0,0,0.04); }
-.page-title { font-family:'Lora',serif; font-size:22px; font-weight:600; color:#1A3A5C; }
-.page-sub { font-size:12.5px; color:#8A8070; margin-top:3px; }
-.page-date { font-size:12px; color:#A09880; font-weight:500; }
-.kpi { background:#fff; border:1px solid #E2DDD5; border-radius:12px; padding:20px 24px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.04); position:relative; overflow:hidden; }
-.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-.kpi.blue::before  { background:#1A3A5C; }
-.kpi.teal::before  { background:#0D9488; }
-.kpi.amber::before { background:#D97706; }
-.kpi.rose::before  { background:#E11D48; }
-.kpi-label { font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; font-weight:600; color:#8A8070; margin-bottom:8px; }
-.kpi-value { font-family:'Lora',serif; font-size:36px; font-weight:600; color:#1A3A5C; line-height:1; }
-.kpi-sub   { font-size:11.5px; color:#A09880; margin-top:5px; }
-.kpi-icon  { position:absolute; top:18px; right:20px; font-size:26px; opacity:.12; }
-.sec { font-family:'Lora',serif; font-size:16px; font-weight:600; color:#1A3A5C;
-    margin:24px 0 14px; display:flex; align-items:center; gap:8px; }
-.sec hr { flex:1; border:none; border-top:1px solid #E2DDD5; margin-left:10px; }
-.hist-card { background:#fff; border:1px solid #E2DDD5; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-.hist-row { padding:14px 20px; border-bottom:1px solid #F5F2EE; }
+#MainMenu, footer, [data-testid="stHeader"] { display:none !important; visibility:hidden !important; }
+.block-container { padding: 0 2.5rem 2rem !important; max-width: 100% !important; }
+
+[data-testid="stSidebar"] { background: #17202A !important; border-right:none !important; box-shadow: 6px 0 30px rgba(0,0,0,0.15) !important; }
+[data-testid="stSidebar"] * { color: #B8B0A0 !important; }
+[data-testid="stSidebarNav"] { display: none !important; }
+.sb-brand { font-family:'Cormorant Garamond',serif; font-size:13px; font-weight:400;
+    letter-spacing:5px; text-transform:uppercase; color:#F0EAE0 !important;
+    padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:22px; }
+.sb-username { font-size:15px; font-weight:500; color:#F0EAE0 !important; }
+.sb-role { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#425A6A !important; margin-top:3px; }
+.sb-sep { height:1px; background:rgba(255,255,255,0.05); margin:20px 0; }
+.sb-label { font-size:9.5px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase;
+    color:#304050 !important; margin-bottom:10px; display:block; }
+[data-testid="stSidebar"] [data-testid="stButton"] button {
+    background:transparent !important; border:1px solid rgba(255,255,255,0.06) !important;
+    color:#7A9AAA !important; border-radius:7px !important; font-size:13px !important;
+    font-family:'Outfit',sans-serif !important; font-weight:400 !important;
+    padding:10px 16px !important; width:100% !important; text-align:left !important;
+    transition:all 0.18s !important; margin-bottom:6px !important;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button:hover {
+    background:rgba(255,255,255,0.07) !important; color:#F0EAE0 !important;
+    border-color:rgba(255,255,255,0.15) !important;
+}
+/* Assistant button — first = highlighted gold */
+[data-testid="stSidebar"] [data-testid="stButton"]:nth-of-type(1) button {
+    background: rgba(212,168,83,0.12) !important;
+    border: 1px solid rgba(212,168,83,0.3) !important;
+    color: #D4A853 !important; font-weight: 500 !important;
+}
+[data-testid="stSidebar"] [data-testid="stButton"]:nth-of-type(1) button:hover {
+    background: rgba(212,168,83,0.22) !important;
+    border-color: rgba(212,168,83,0.5) !important; color: #E8C070 !important;
+}
+/* Logout — last button = red */
+[data-testid="stSidebar"] [data-testid="stButton"]:last-of-type button {
+    background: transparent !important;
+    border: 1px solid rgba(220,80,60,0.2) !important;
+    color: rgba(220,80,60,0.55) !important;
+}
+[data-testid="stSidebar"] [data-testid="stButton"]:last-of-type button:hover {
+    background: rgba(220,80,60,0.1) !important;
+    border-color: rgba(220,80,60,0.45) !important; color: #DC503C !important;
+}
+[data-testid="stSidebar"] [data-testid="stSlider"] label {
+    font-size:9.5px !important; letter-spacing:2px !important;
+    text-transform:uppercase !important; color:#304050 !important; font-weight:700 !important;
+}
+
+/* PAGE HEADER */
+.page-top {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid rgba(28,28,28,0.07);
+    margin-bottom: 32px;
+}
+.page-h { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300;
+    color:#1C1C1C; letter-spacing:-0.3px; }
+.page-sub { font-size:11.5px; color:#9A9080; margin-top:4px; letter-spacing:0.3px; }
+.page-date { font-size:12px; color:#B0A890; font-weight:400; }
+
+/* KPIs */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:36px; }
+.kpi {
+    background:#fff; border:1px solid #EAE4DA; border-radius:10px;
+    padding:22px 24px; position:relative; overflow:hidden;
+    box-shadow:0 2px 12px rgba(0,0,0,0.04);
+}
+.kpi-accent { position:absolute; top:0; left:0; right:0; height:2.5px; border-radius:10px 10px 0 0; }
+.kpi-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+    color:#A09880; margin-bottom:10px; }
+.kpi-val { font-family:'Cormorant Garamond',serif; font-size:44px; font-weight:300;
+    color:#1C1C1C; line-height:1; letter-spacing:-1px; }
+.kpi-sub { font-size:11.5px; color:#C0B8A8; margin-top:6px; }
+
+/* SECTION TITLES */
+.sec-h { font-size:10px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase;
+    color:#9A9080; display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.sec-h::after { content:''; flex:1; height:1px; background:#EAE4DA; }
+
+/* HISTORY */
+.hist-wrap { background:#fff; border:1px solid #EAE4DA; border-radius:10px;
+    overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
+.hist-row { padding:18px 24px; border-bottom:1px solid #F5F0EA; transition:background 0.15s; }
 .hist-row:last-child { border-bottom:none; }
-.hist-row:hover { background:#FAFAF8; }
-.hist-q { font-size:14px; font-weight:500; color:#1A1A1A; margin-bottom:4px; }
-.hist-preview { font-size:12.5px; color:#7A7060; margin-top:5px; line-height:1.5;
+.hist-row:hover { background:#FDFAF6; }
+.hist-q { font-size:14px; font-weight:500; color:#1C1C1C; margin-bottom:6px; }
+.hist-preview { font-size:13px; color:#7A7060; line-height:1.65;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.hist-meta { display:flex; gap:12px; align-items:center; margin-top:7px; flex-wrap:wrap; }
-.hist-time { font-size:11px; color:#A09880; }
-.tag  { font-size:11px; background:#EEF2F7; color:#2A4A6A; border-radius:16px; padding:2px 10px; font-weight:500; }
-.chip { display:inline-block; background:#EEF2F7; border:1px solid #D8E0EB; border-radius:16px;
-    padding:3px 10px; font-size:11px; color:#2A4A6A; margin:2px 2px 0 0; }
-.topics { display:flex; flex-wrap:wrap; gap:7px; }
-.topic      { background:#EEF2F7; border:1px solid #D8E0EB; border-radius:16px; padding:5px 12px; font-size:12.5px; color:#1A3A5C; font-weight:500; }
-.topic.hot  { background:#FEF3C7; border-color:#FDE68A; color:#92400E; }
-.topic.warm { background:#F0FDF4; border-color:#BBF7D0; color:#166534; }
-.empty { text-align:center; padding:60px 20px; color:#A09880; }
-.empty-icon  { font-size:44px; margin-bottom:14px; }
-.empty-title { font-family:'Lora',serif; font-size:18px; color:#5A5040; margin-bottom:8px; }
-.empty-text  { font-size:13px; line-height:1.6; }
-[data-testid="stTextInput"] input { background:#fff !important; border:1.5px solid #DDD8CF !important;
-    border-radius:10px !important; padding:10px 14px !important; font-size:14px !important; }
-[data-testid="stSelectbox"] > div > div { background:#fff !important; border:1.5px solid #DDD8CF !important; border-radius:10px !important; }
-[data-testid="stExpander"] { background:#FAFAF8 !important; border:1px solid #E8E4DC !important; border-radius:10px !important; }
+.hist-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+.hist-date { font-size:11px; color:#C0B8A8; }
+.hist-tag { font-size:11px; background:#F5F0EA; color:#5A5040; border-radius:4px;
+    padding:2px 9px; font-weight:500; }
+
+/* TOPIC PILLS */
+.topic { display:inline-block; border-radius:6px; padding:5px 12px;
+    font-size:12px; font-weight:500; margin:3px 3px 0 0; }
+.topic.hot { background:#17202A; color:#F0EAE0; }
+.topic.warm { background:#F5F0EA; color:#4A4030; border:1px solid #EAE4DA; }
+.topic.cool { background:#EEF2F7; color:#2A4060; border:1px solid #D8E4F0; }
+
+.empty-state { text-align:center; padding:80px 20px; }
+.empty-icon { font-family:'Cormorant Garamond',serif; font-size:56px; color:rgba(28,28,28,0.06);
+    margin-bottom:20px; }
+.empty-h { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300;
+    color:#5A5040; margin-bottom:8px; }
+.empty-p { font-size:13px; color:#A09880; line-height:1.7; }
+
+[data-testid="stTextInput"] input { background:#fff !important; border:1.5px solid #E4DED4 !important;
+    border-radius:8px !important; padding:11px 15px !important; font-size:14px !important;
+    font-family:'Outfit',sans-serif !important; }
+[data-testid="stTextInput"] input:focus { border-color:#17202A !important; box-shadow:none !important; }
+[data-testid="stSelectbox"] > div > div { background:#fff !important;
+    border:1.5px solid #E4DED4 !important; border-radius:8px !important; }
+[data-testid="stButton"] button { font-family:'Outfit',sans-serif !important;
+    font-size:13px !important; border-radius:7px !important; }
+[data-testid="stExpander"] { background:#FDFAF6 !important;
+    border:1px solid #EAE4DA !important; border-radius:8px !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session ───────────────────────────────────────────────────────────────────
 user     = st.session_state.get("user") or {}
 username = user.get("username", "Médecin")
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-    <div style="padding:0 0 20px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;">
-        <div style="font-family:'Lora',serif;font-size:19px;font-weight:600;color:#fff;margin-bottom:4px;">🏥 MediAssist</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1.8px;text-transform:uppercase;">ProtoCare RAG</div>
-    </div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:20px;">
-        Connecté : <strong style="color:#fff;">{username}</strong>
-    </div>
+    <div class="sb-brand">ProtoCare</div>
+    <div class="sb-username">{username}</div>
+    <div class="sb-role">Personnel médical</div>
+    <div class="sb-sep"></div>
+    <span class="sb-label">Navigation</span>
     """, unsafe_allow_html=True)
-    st.markdown('<div style="font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:10px;">Navigation</div>', unsafe_allow_html=True)
-    if st.button("💬  Assistant RAG"):
+    if st.button("↗  Assistant RAG", key="nav_chat"):
         st.switch_page("pages/chat.py")
-    if st.button("📊  Tableau de bord"):
+    if st.button("⊕  Historique & Dashboard", key="nav_history"):
         pass
-    st.markdown("---")
+    st.markdown('<div class="sb-sep"></div><span class="sb-label">Affichage</span>', unsafe_allow_html=True)
     limit = st.slider("Requêtes à charger", 10, 100, 50)
-    st.markdown("---")
-    if st.button("🚪  Se déconnecter"):
+    st.markdown('<div class="sb-sep"></div>', unsafe_allow_html=True)
+    if st.button("⎋  Déconnexion", key="logout"):
         st.session_state.token = None
         st.session_state.user  = None
         st.switch_page("app.py")
 
-# ── Chargement  GET /history/ ─────────────────────────────────────────────────
 @st.cache_data(ttl=30, show_spinner=False)
 def load(token_hash, lim):
     return get_history(limit=lim)
 
-with st.spinner("Chargement…"):
+with st.spinner(""):
     raw, err = load(hash(st.session_state.token), limit)
 
 if err == "SESSION_EXPIRED":
     st.session_state.token = None
     st.switch_page("app.py")
 
-# Normalise en liste
 records = []
 if raw:
-    if isinstance(raw, list):
-        records = raw
-    elif isinstance(raw, dict):
-        records = raw.get("items", raw.get("history", raw.get("queries", [])))
+    if isinstance(raw, list): records = raw
+    elif isinstance(raw, dict): records = raw.get("items", raw.get("history", raw.get("queries", [])))
 
-# ── Page header ───────────────────────────────────────────────────────────────
-today = datetime.now().strftime("%A %d %B %Y")
+today = datetime.now().strftime("%d %B %Y")
 st.markdown(f"""
-<div class="page-header">
+<div class="page-top">
   <div>
-    <div class="page-title">Tableau de bord</div>
-    <div class="page-sub">Historique des requêtes · Table <code>query</code> · GET /history/</div>
+    <div class="page-h">Historique & Dashboard</div>
+    <div class="page-sub">Table query · GET /history/ · Base PostgreSQL</div>
   </div>
-  <div class="page-date">📅 {today}</div>
+  <div class="page-date">{today}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── KPIs ──────────────────────────────────────────────────────────────────────
-total    = len(records)
-today_s  = datetime.now().strftime("%Y-%m-%d")
-today_n  = sum(1 for r in records if today_s in str(r.get("created_at", "")))
-
-# sources est déjà list[str] grâce à QueryOut.from_orm_custom dans le backend
+total        = len(records)
+today_s      = datetime.now().strftime("%Y-%m-%d")
+today_n      = sum(1 for r in records if today_s in str(r.get("created_at", "")))
 total_src    = sum(len(r.get("sources", [])) for r in records)
-total_chunks = sum(r.get("chunks_used", 0)   for r in records)
+total_chunks = sum(r.get("chunks_used", 0) for r in records)
 
-for col, (color, icon, label, val, sub) in zip(
-    st.columns(4),
-    [
-        ("blue",  "📋", "Total requêtes",  total,        "enregistrées en base"),
-        ("teal",  "🗓️",  "Aujourd'hui",    today_n,      "requêtes du jour"),
-        ("amber", "📚", "Sources citées",  total_src,    "fichiers récupérés"),
-        ("rose",  "🧩", "Chunks utilisés", total_chunks, "passages traités"),
-    ]
-):
-    with col:
-        st.markdown(f"""
-        <div class="kpi {color}">
-          <div class="kpi-icon">{icon}</div>
-          <div class="kpi-label">{label}</div>
-          <div class="kpi-value">{val}</div>
-          <div class="kpi-sub">{sub}</div>
-        </div>""", unsafe_allow_html=True)
+st.markdown(f"""
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-accent" style="background:#17202A;"></div>
+    <div class="kpi-label">Total requêtes</div>
+    <div class="kpi-val">{total}</div>
+    <div class="kpi-sub">enregistrées en base</div>
+  </div>
+  <div class="kpi"><div class="kpi-accent" style="background:#4CAF82;"></div>
+    <div class="kpi-label">Aujourd'hui</div>
+    <div class="kpi-val">{today_n}</div>
+    <div class="kpi-sub">requêtes du jour</div>
+  </div>
+  <div class="kpi"><div class="kpi-accent" style="background:#D4A853;"></div>
+    <div class="kpi-label">Sources citées</div>
+    <div class="kpi-val">{total_src}</div>
+    <div class="kpi-sub">fichiers récupérés</div>
+  </div>
+  <div class="kpi"><div class="kpi-accent" style="background:#6B8CBE;"></div>
+    <div class="kpi-label">Chunks utilisés</div>
+    <div class="kpi-val">{total_chunks}</div>
+    <div class="kpi-sub">passages traités</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-# ── Graphes ───────────────────────────────────────────────────────────────────
 if records:
     col_g, col_t = st.columns([3, 2])
-
     with col_g:
-        st.markdown('<div class="sec">📈 Activité quotidienne <hr></div>', unsafe_allow_html=True)
+        st.markdown('<div class="sec-h">Activité quotidienne</div>', unsafe_allow_html=True)
         date_counts: Counter = Counter()
         for r in records:
             m = re.search(r"(\d{4}-\d{2}-\d{2})", str(r.get("created_at", "")))
-            if m:
-                date_counts[m.group(1)] += 1
+            if m: date_counts[m.group(1)] += 1
         if date_counts:
             df = pd.DataFrame(sorted(date_counts.items()), columns=["Date", "Requêtes"])
             df["Date"] = pd.to_datetime(df["Date"])
-            st.area_chart(df.set_index("Date"), height=180, use_container_width=True)
-        else:
-            st.info("Pas encore de données temporelles.")
+            st.area_chart(df.set_index("Date"), height=160, use_container_width=True)
 
     with col_t:
-        st.markdown('<div class="sec">🏷️ Sujets fréquents <hr></div>', unsafe_allow_html=True)
-        KEYWORDS = ["protocole","hypertension","diabète","antibiothérapie","douleur","urgence",
-                    "posologie","interaction","traitement","diagnostic","cardio","pneumonie",
-                    "sepsis","AVC","infarctus","allergie","anticoagulant","glycémie"]
+        st.markdown('<div class="sec-h">Sujets fréquents</div>', unsafe_allow_html=True)
+        KEYWORDS = ["diarrhée","toux","fièvre","détresse","douleur","agitation","méduse","violence",
+                    "urgence","traitement","diagnostic","protocole","posologie","infection","allergie"]
         kw_c: Counter = Counter()
         for r in records:
-            # colonne "query" dans la table (pas "question")
             q = str(r.get("query", "")).lower()
             for kw in KEYWORDS:
-                if kw in q:
-                    kw_c[kw] += 1
-        top = kw_c.most_common(10)
+                if kw in q: kw_c[kw] += 1
+        top = kw_c.most_common(12)
         if top:
             mx = top[0][1]
             chips = "".join(
-                f'<span class="topic {"hot" if c >= mx*0.7 else "warm" if c >= mx*0.4 else ""}">'
-                f'#{kw} ({c})</span>' for kw, c in top
+                f'<span class="topic {"hot" if c >= mx*0.7 else "warm" if c >= mx*0.4 else "cool"}">'
+                f'{kw} ({c})</span>' for kw, c in top
             )
-            st.markdown(f'<div class="topics">{chips}</div>', unsafe_allow_html=True)
-        else:
-            st.info("Pas encore assez de données.")
+            st.markdown(f'<div style="margin-top:8px;">{chips}</div>', unsafe_allow_html=True)
 
-# ── Liste historique ──────────────────────────────────────────────────────────
-st.markdown('<div class="sec">🕐 Historique des interactions <hr></div>', unsafe_allow_html=True)
+st.markdown('<br>', unsafe_allow_html=True)
+st.markdown('<div class="sec-h">Interactions</div>', unsafe_allow_html=True)
 
 s_col, f_col = st.columns([4, 1])
 with s_col:
-    search = st.text_input("", placeholder="🔍  Rechercher dans les requêtes…", label_visibility="collapsed")
+    search = st.text_input("", placeholder="Rechercher dans les requêtes…", label_visibility="collapsed")
 with f_col:
     order = st.selectbox("", ["Plus récent", "Plus ancien"], label_visibility="collapsed")
 
 filtered = records
 if search:
     filtered = [r for r in records if
-        search.lower() in str(r.get("query",   "")).lower()   # colonne "query"
-        or search.lower() in str(r.get("reponse", "")).lower() # colonne "reponse"
-    ]
+        search.lower() in str(r.get("query", "")).lower()
+        or search.lower() in str(r.get("reponse", "")).lower()]
 if order == "Plus ancien":
     filtered = list(reversed(filtered))
 
 if not filtered:
     st.markdown("""
-    <div class="empty">
-      <div class="empty-icon">📭</div>
-      <div class="empty-title">Aucune interaction trouvée</div>
-      <div class="empty-text">
-        Vos échanges avec l'assistant apparaîtront ici après chaque POST /query/ask.
-      </div>
+    <div class="empty-state">
+      <div class="empty-icon">∅</div>
+      <div class="empty-h">Aucune interaction trouvée</div>
+      <div class="empty-p">Vos échanges avec l'assistant apparaîtront ici.</div>
     </div>""", unsafe_allow_html=True)
 else:
-    st.markdown(f"<div style='font-size:12.5px;color:#8A8070;margin-bottom:12px;'>{len(filtered)} résultat{'s' if len(filtered)!=1 else ''}</div>", unsafe_allow_html=True)
-    st.markdown('<div class="hist-card">', unsafe_allow_html=True)
-
+    st.markdown(f"<div style='font-size:12px;color:#A09880;margin-bottom:14px;'>{len(filtered)} résultat{'s' if len(filtered)!=1 else ''}</div>", unsafe_allow_html=True)
+    st.markdown('<div class="hist-wrap">', unsafe_allow_html=True)
     for i, rec in enumerate(filtered):
-        # Noms de colonnes exacts du brief : query, reponse
-        question   = str(rec.get("query",      "—"))
-        reponse    = str(rec.get("reponse",     ""))
-        sources    = rec.get("sources",    [])   # list[str] converti par le backend
-        chunks     = rec.get("chunks_used", 0)
-        raw_date   = str(rec.get("created_at", ""))
-
+        question = str(rec.get("query", "—"))
+        reponse  = str(rec.get("reponse", ""))
+        sources  = rec.get("sources", [])
+        chunks   = rec.get("chunks_used", 0)
+        raw_date = str(rec.get("created_at", ""))
         try:
             dt    = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
-            fdate = dt.strftime("%d/%m/%Y à %H:%M")
-        except Exception:
-            fdate = raw_date[:16] or "—"
+            fdate = dt.strftime("%d/%m/%Y · %H:%M")
+        except: fdate = raw_date[:16] or "—"
 
-        preview    = reponse[:200] + "…" if len(reponse) > 200 else reponse
-        src_tag    = f'<span class="tag">📚 {len(sources)} source{"s" if len(sources)!=1 else ""}</span>' if sources else ""
-        chunk_tag  = f'<span class="tag">🧩 {chunks} chunk{"s" if chunks!=1 else ""}</span>'             if chunks  else ""
+        preview   = reponse[:180] + "…" if len(reponse) > 180 else reponse
+        src_tag   = f'<span class="hist-tag">{len(sources)} source{"s" if len(sources)!=1 else ""}</span>' if sources else ""
+        chunk_tag = f'<span class="hist-tag">{chunks} chunk{"s" if chunks!=1 else ""}</span>' if chunks else ""
 
         st.markdown(f"""
         <div class="hist-row">
-          <div class="hist-q">❓ {question}</div>
+          <div class="hist-q">{question}</div>
           <div class="hist-preview">{preview}</div>
           <div class="hist-meta">
-            <span class="hist-time">🕐 {fdate}</span>
+            <span class="hist-date">{fdate}</span>
             {src_tag}{chunk_tag}
           </div>
         </div>""", unsafe_allow_html=True)
 
-        with st.expander(f"Réponse complète #{i+1}"):
+        with st.expander(f"Réponse complète"):
             st.markdown(f"**Question :** {question}\n\n---\n\n{reponse}")
             if sources:
                 st.markdown("**Sources :**")
-                for s in sources:
-                    st.markdown(f"- 📄 `{s}`")
-            if chunks:
-                st.markdown(f"*{chunks} chunks utilisés*")
+                for s in sources: st.markdown(f"- `{s}`")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-    # Export CSV
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-    if st.button("⬇️  Exporter en CSV"):
+    if st.button("⬇  Exporter en CSV"):
         df_exp = pd.DataFrame([{
-            "Date":         str(r.get("created_at", "")),
-            "Question":     str(r.get("query",   "")),      # colonne "query"
-            "Réponse":      str(r.get("reponse", "")),      # colonne "reponse"
-            "Sources":      ", ".join(r.get("sources", [])),
-            "Chunks":       r.get("chunks_used", 0),
+            "Date": str(r.get("created_at", "")),
+            "Question": str(r.get("query", "")),
+            "Réponse": str(r.get("reponse", "")),
+            "Sources": ", ".join(r.get("sources", [])),
+            "Chunks": r.get("chunks_used", 0),
         } for r in filtered])
-        st.download_button(
-            "📥 Télécharger",
+        st.download_button("Télécharger",
             data=df_exp.to_csv(index=False, encoding="utf-8-sig"),
             file_name=f"protocare_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-            mime="text/csv",
-        )
+            mime="text/csv")

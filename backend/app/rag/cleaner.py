@@ -13,11 +13,9 @@ def _normalize_tables(text: str) -> str:
     while i < len(lines):
         line = lines[i]
 
-        # Si on est dans un tableau
         if line.strip().startswith("|"):
             merged_line = line.rstrip()
 
-            # Fusionner les lignes suivantes tant qu'elles appartiennent à la même cellule
             while i + 1 < len(lines):
                 next_line = lines[i + 1]
 
@@ -29,7 +27,6 @@ def _normalize_tables(text: str) -> str:
                 merged_line += " " + next_line.strip()
                 i += 1
 
-            # Nettoyage des espaces multiples
             merged_line = re.sub(r"\s{2,}", " ", merged_line)
             cleaned_lines.append(merged_line)
 
@@ -43,10 +40,8 @@ def _normalize_tables(text: str) -> str:
 
 def _remove_page_noise(text: str) -> str:
  
-    # Supprime les lignes du type : "Guide des Protocoles ... 12"
     text = re.sub(r"^Guide des Protocoles.*\d+\s*$", "", text, flags=re.MULTILINE)
 
-    # Supprime les lignes contenant uniquement un numéro (pagination)
     text = re.sub(r"^\s*\d+\s*$", "", text, flags=re.MULTILINE)
 
     lines = text.split("\n")
@@ -54,7 +49,6 @@ def _remove_page_noise(text: str) -> str:
     i = 0
 
     while i < len(lines):
-        # Détection d'un bloc de titres successifs (page de couverture)
         if lines[i].strip().startswith("#"):
             j = i
             while j < len(lines) and (
@@ -66,7 +60,6 @@ def _remove_page_noise(text: str) -> str:
                 1 for line in lines[i:j] if line.strip().startswith("#")
             )
 
-            # Si trop de titres d'affilée → on considère que c'est du bruit
             if title_count >= 3:
                 i = j
                 continue
@@ -76,7 +69,6 @@ def _remove_page_noise(text: str) -> str:
 
     text = "\n".join(filtered_lines)
 
-    # Supprime les lignes vides en excès
     text = re.sub(r"\n{3,}", "\n\n", text)
 
     return text.strip()
@@ -99,7 +91,7 @@ def clean_markdown_file(input_path: str, output_path: str = None) -> str:
     output_file = Path(output_path) if output_path else input_file
     output_file.write_text(cleaned_text, encoding="utf-8")
 
-    print(f"✓ Markdown nettoyé : {output_file}")
+    print(f"  Markdown nettoyé : {output_file}")
     print(f"  Avant : {len(original_text)} caractères")
     print(f"  Après : {len(cleaned_text)} caractères")
 
